@@ -17,3 +17,10 @@ output "aurora_cluster_endpoint" {
 output "aurora_secret_arn" {
   value = module.aurora.secret_arn
 }
+output "redis_endpoint" {
+  value = module.elasticache.redis_endpoint
+}
+
+output "redis_port" {
+  value = module.elasticache.redis_port
+}
