@@ -37,6 +37,9 @@ module "ecs" {
   vpc_id                 = module.vpc.vpc_id
   private_subnet_ids     = module.vpc.private_subnet_ids
   alb_security_group_id  = module.alb.alb_security_group_id
+  db_secret_arn           = module.aurora.secret_arn
+  smtp_secret_arn         = module.secrets.smtp_secret_arn
+  webhook_secret_arn      = module.secrets.webhook_secret_arn
 }
 module "secrets" {
   source      = "./modules/secrets"

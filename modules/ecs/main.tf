@@ -79,6 +79,7 @@ resource "aws_ecs_task_definition" "auth" {
   cpu                      = var.task_cpu
   memory                   = var.task_memory
   execution_role_arn       = aws_iam_role.ecs_execution.arn
+  task_role_arn = aws_iam_role.ecs_task.arn
 
   container_definitions = jsonencode([
     {
@@ -106,6 +107,7 @@ resource "aws_ecs_task_definition" "auth" {
     Environment = var.environment
   }
 }
+
 
 # NOTE: No aws_ecs_service resource yet — intentionally deferred to Day 6
 # when the real auth service image exists in ECR. Creating a running
