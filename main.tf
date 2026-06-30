@@ -38,3 +38,7 @@ module "ecs" {
   private_subnet_ids     = module.vpc.private_subnet_ids
   alb_security_group_id  = module.alb.alb_security_group_id
 }
+module "secrets" {
+  source      = "./modules/secrets"
+  environment = "dev"
+}

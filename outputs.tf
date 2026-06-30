@@ -31,3 +31,11 @@ output "alb_dns_name" {
 output "ecs_cluster_name" {
   value = module.ecs.cluster_name
 }
+
+output "smtp_secret_arn" {
+  value = module.secrets.smtp_secret_arn
+}
+
+output "webhook_secret_arn" {
+  value = module.secrets.webhook_secret_arn
+}
