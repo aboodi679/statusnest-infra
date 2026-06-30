@@ -39,3 +39,6 @@ output "smtp_secret_arn" {
 output "webhook_secret_arn" {
   value = module.secrets.webhook_secret_arn
 }
+output "github_actions_role_arn" {
+  value = module.oidc.github_actions_role_arn
+}

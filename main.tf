@@ -45,3 +45,7 @@ module "secrets" {
   source      = "./modules/secrets"
   environment = "dev"
 }
+module "oidc" {
+  source      = "./modules/oidc"
+  environment = "dev"
+}
