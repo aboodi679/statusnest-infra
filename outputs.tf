@@ -24,3 +24,10 @@ output "redis_endpoint" {
 output "redis_port" {
   value = module.elasticache.redis_port
 }
+output "alb_dns_name" {
+  value = module.alb.alb_dns_name
+}
+
+output "ecs_cluster_name" {
+  value = module.ecs.cluster_name
+}
