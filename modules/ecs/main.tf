@@ -98,7 +98,8 @@ resource "aws_ecs_task_definition" "auth" {
       ]
       environment = [
         { name = "JWT_ALGORITHM",      value = "HS256" },
-        { name = "JWT_EXPIRE_MINUTES", value = "30"   }
+        { name = "JWT_EXPIRE_MINUTES", value = "30"   },
+        { name = "REDIS_URL",          value = var.redis_url }
       ]
       secrets = [
         { name = "JWT_SECRET",    valueFrom = "${var.jwt_secret_arn}:value::" },
