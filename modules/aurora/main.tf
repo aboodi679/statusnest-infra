@@ -65,7 +65,7 @@ resource "aws_security_group" "aurora" {
 resource "aws_db_instance" "main" {
   identifier             = "statusnest-${var.environment}-db"
   engine                 = "postgres"
- engine_version         = "17.10"
+  engine_version         = "17.10"
   instance_class         = var.instance_class
   allocated_storage      = 20
   storage_type           = "gp2"

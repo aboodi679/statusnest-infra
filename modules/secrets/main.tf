@@ -40,3 +40,22 @@ resource "aws_secretsmanager_secret_version" "webhook" {
     ignore_changes = [secret_string]
   }
 }
+resource "aws_secretsmanager_secret" "jwt_secret" {
+  name = "statusnest-${var.environment}-jwt-secret"
+  tags = {
+    Environment = var.environment
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "jwt_secret" {
+  secret_id     = aws_secretsmanager_secret.jwt_secret.id
+  secret_string = jsonencode({ value = "change-me-before-production" })
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
+}
+
+resource "aws_secretsmanager_secret" "db_url" {
+  name = "statusnest-${var.environment}-database-url"
+  tags = { Environment = var.environment }
+}

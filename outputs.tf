@@ -42,3 +42,17 @@ output "webhook_secret_arn" {
 output "github_actions_role_arn" {
   value = module.oidc.github_actions_role_arn
 }
+output "sns_topic_arn" {
+  value = module.notifications.sns_topic_arn
+}
+output "frontend_bucket_name" {
+  value = module.frontend.bucket_name
+}
+
+output "cloudfront_domain" {
+  value = module.frontend.cloudfront_domain
+}
+
+output "cloudfront_distribution_id" {
+  value = module.frontend.cloudfront_distribution_id
+}

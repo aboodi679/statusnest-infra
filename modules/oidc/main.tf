@@ -64,6 +64,26 @@ resource "aws_iam_role_policy" "github_actions_deploy" {
         Resource = "*" # this specific action requires "*"; it's a global auth endpoint, not a per-repo grant
       },
       {
+        Sid    = "S3Frontend"
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject",
+          "s3:ListBucket",
+        ]
+        Resource = [
+          "arn:aws:s3:::statusnest-${var.environment}-frontend",
+          "arn:aws:s3:::statusnest-${var.environment}-frontend/*",
+        ]
+      },
+      {
+        Sid    = "CloudFrontInvalidate"
+        Effect = "Allow"
+        Action = ["cloudfront:CreateInvalidation"]
+        Resource = "arn:aws:cloudfront::026243800492:distribution/E1PD475EXURYXL"
+      },
+      {
         Sid    = "ECRPush"
         Effect = "Allow"
         Action = [
