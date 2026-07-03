@@ -58,13 +58,13 @@ CloudFront (d1wwgn689544k.cloudfront.net)
 
 | Resource | Value |
 |---|---|
-| CloudFront | `d1wwgn689544k.cloudfront.net` (ID: `E1PD475EXURYXL`) |
-| ALB | `statusnest-dev-alb-1293848550.us-east-1.elb.amazonaws.com` |
-| ECS Cluster | `statusnest-dev-cluster` |
-| RDS | `statusnest-dev-db.c2hcyc4yyuxy.us-east-1.rds.amazonaws.com` |
-| Redis | `statusnest-dev-redis.b8x2ra.0001.use1.cache.amazonaws.com:6379` |
-| S3 Bucket | `statusnest-dev-frontend` |
-| GitHub Actions Role | `arn:aws:iam::026243800492:role/statusnest-dev-github-actions-role` |
+| CloudFront | `---` (ID: `---`) |
+| ALB | `---` |
+| ECS Cluster | `---` |
+| RDS | `---` |
+| Redis | `---` |
+| S3 Bucket | `---` |
+| GitHub Actions Role | `---` |
 
 ---
 
@@ -95,7 +95,7 @@ terraform apply -var="environment=dev"
 
 GitHub Actions uses OIDC to assume the GitHub Actions IAM role — no long-lived AWS credentials stored in GitHub secrets.
 
-The role trust policy allows the `aboodi679/statusnest-*` repos to assume it on pushes to `main`.
+The role trust policy allows the `abood*` repos to assume it on pushes to `main`.
 
 ---
 
