@@ -6,6 +6,11 @@ Terraform IaC for the StatusNest multi-tenant service monitoring platform. Provi
 
 ---
 
+<img width="1568" height="685" alt="image" src="https://github.com/user-attachments/assets/c85a8b12-6b1f-40c3-ba40-031c2c26ed6f" />
+
+<img width="1507" height="745" alt="image" src="https://github.com/user-attachments/assets/84e78bbd-6af2-4398-a5d9-6fdc67985ced" />
+
+
 ## Architecture
 
 ```
