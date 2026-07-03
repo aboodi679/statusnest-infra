@@ -2,8 +2,6 @@
 
 Terraform IaC for the StatusNest multi-tenant service monitoring platform. Provisions the complete AWS infrastructure across modular, reusable components.
 
-**Account:** `026243800492` | **Region:** `us-east-1`
-
 ---
 
 <img width="1568" height="685" alt="image" src="https://github.com/user-attachments/assets/c85a8b12-6b1f-40c3-ba40-031c2c26ed6f" />
