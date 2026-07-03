@@ -56,3 +56,12 @@ output "cloudfront_domain" {
 output "cloudfront_distribution_id" {
   value = module.frontend.cloudfront_distribution_id
 }
+output "waf_web_acl_arn" {
+  value = module.waf.web_acl_arn
+}
+output "waf_alb_web_acl_arn" {
+  value = module.waf_alb.web_acl_arn
+}
+output "dashboard_url" {
+  value = module.monitoring.dashboard_url
+}

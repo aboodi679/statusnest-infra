@@ -1,4 +1,4 @@
-﻿resource "aws_ecs_cluster" "main" {
+resource "aws_ecs_cluster" "main" {
   name = "statusnest-${var.environment}-cluster"
   setting {
     name  = "containerInsights"
@@ -18,6 +18,20 @@ resource "aws_security_group" "ecs_tasks" {
     description     = "From ALB"
     from_port       = var.container_port
     to_port         = var.container_port
+    protocol        = "tcp"
+    security_groups = [var.alb_security_group_id]
+  }
+  ingress {
+    description     = "From ALB to monitor"
+    from_port       = 8001
+    to_port         = 8001
+    protocol        = "tcp"
+    security_groups = [var.alb_security_group_id]
+  }
+  ingress {
+    description     = "From ALB to status"
+    from_port       = 8002
+    to_port         = 8002
     protocol        = "tcp"
     security_groups = [var.alb_security_group_id]
   }
@@ -77,6 +91,27 @@ resource "aws_cloudwatch_log_group" "auth" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "xray" {
+  name              = "/ecs/statusnest-${var.environment}-xray"
+  retention_in_days = 7
+  tags = {
+    Environment = var.environment
+  }
+}
+
+resource "aws_iam_role_policy" "ecs_xray" {
+  name = "statusnest-${var.environment}-ecs-xray-policy"
+  role = aws_iam_role.ecs_task.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["xray:PutTraceSegments", "xray:PutTelemetryRecords", "xray:GetSamplingRules", "xray:GetSamplingTargets"]
+      Resource = "*"
+    }]
+  })
+}
+
 resource "aws_ecs_task_definition" "auth" {
   family                   = "statusnest-${var.environment}-auth"
   requires_compatibilities = ["FARGATE"]
@@ -97,13 +132,14 @@ resource "aws_ecs_task_definition" "auth" {
         }
       ]
       environment = [
-        { name = "JWT_ALGORITHM",      value = "HS256" },
-        { name = "JWT_EXPIRE_MINUTES", value = "30"   },
-        { name = "REDIS_URL",          value = var.redis_url }
+        { name = "JWT_ALGORITHM",           value = "HS256" },
+        { name = "JWT_EXPIRE_MINUTES",      value = "30"    },
+        { name = "REDIS_URL",               value = var.redis_url },
+        { name = "AWS_XRAY_DAEMON_ADDRESS", value = "127.0.0.1:2000" }
       ]
       secrets = [
-        { name = "JWT_SECRET",    valueFrom = "${var.jwt_secret_arn}:value::" },
-        { name = "DATABASE_URL",  valueFrom = var.db_url_secret_arn }
+        { name = "JWT_SECRET",   valueFrom = "${var.jwt_secret_arn}:value::" },
+        { name = "DATABASE_URL", valueFrom = var.db_url_secret_arn }
       ]
       logConfiguration = {
         logDriver = "awslogs"
@@ -111,6 +147,27 @@ resource "aws_ecs_task_definition" "auth" {
           "awslogs-group"         = aws_cloudwatch_log_group.auth.name
           "awslogs-region"        = "us-east-1"
           "awslogs-stream-prefix" = "auth"
+        }
+      }
+    },
+    {
+      name              = "xray-daemon"
+      image             = "public.ecr.aws/xray/aws-xray-daemon:latest"
+      cpu               = 32
+      memoryReservation = 256
+      essential         = false
+      portMappings = [
+        {
+          containerPort = 2000
+          protocol      = "udp"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.xray.name
+          "awslogs-region"        = "us-east-1"
+          "awslogs-stream-prefix" = "xray"
         }
       }
     }

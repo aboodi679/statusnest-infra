@@ -63,7 +63,31 @@ module "notifications" {
   environment = var.environment
   alert_email = "aaboodi679@gmail.com"
 }
-module "frontend" {
-  source      = "./modules/frontend"
+module "waf" {
+  source      = "./modules/waf"
   environment = var.environment
+}
+
+module "frontend" {
+  source          = "./modules/frontend"
+  environment     = var.environment
+  waf_web_acl_arn = module.waf.web_acl_arn
+  alb_dns_name    = module.alb.alb_dns_name
+}
+module "waf_alb" {
+  source      = "./modules/waf-alb"
+  environment = var.environment
+  alb_arn     = module.alb.alb_arn
+}
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  environment             = var.environment
+  sns_topic_arn           = module.notifications.sns_topic_arn
+  ecs_cluster_name        = module.ecs.cluster_name
+  ecs_service_name        = module.ecs.service_name
+  alb_arn_suffix          = module.alb.alb_arn_suffix
+  target_group_arn_suffix = module.alb.auth_target_group_arn_suffix
+  db_instance_identifier  = module.aurora.cluster_id
+  redis_cluster_id        = module.elasticache.cluster_id
 }
