@@ -1,112 +1,113 @@
-# StatusNest Infrastructure
+# StatusNest Infra
 
-> Terraform IaC for the StatusNest AWS infrastructure
+Terraform IaC for the StatusNest multi-tenant service monitoring platform. Provisions the complete AWS infrastructure across modular, reusable components.
 
-All AWS resources for StatusNest defined as code using Terraform — fully reproducible, version-controlled, and modular.
-
----
-
-## AWS Resources
-
-| Service | Purpose |
-|---------|---------|
-| VPC | Private subnets for ECS, RDS, Redis |
-| ECS Fargate | Runs 3 microservice containers |
-| ALB | Path-based routing to each service |
-| RDS PostgreSQL | Persistent storage — tenants, services, incidents |
-| ElastiCache Redis | Current status cache (sub-ms reads) |
-| Lambda | Monitor worker + SQS processor |
-| EventBridge | Triggers Lambda every 60 seconds |
-| SQS + DLQ | Decouples monitor results from processor |
-| SNS | Alert fan-out |
-| ECR | Docker image registry (3 repos) |
-| Secrets Manager | DB credentials, JWT secret |
-| CloudWatch | Dashboards, alarms, log groups |
-| IAM | Least-privilege roles per service, OIDC for CI/CD |
-| S3 | Terraform remote state + frontend hosting |
-| DynamoDB | Terraform state locking |
+**Account:** `026243800492` | **Region:** `us-east-1`
 
 ---
 
-## Module Structure
+## Architecture
 
 ```
-statusnest-infra/
-├── main.tf
-├── variables.tf
-├── outputs.tf
-├── backend.tf
-└── modules/
-    ├── vpc/
-    ├── ecs/
-    ├── aurora/          # RDS PostgreSQL
-    ├── elasticache/     # Redis
-    ├── alb/
-    ├── lambda/
-    ├── sqs/
-    ├── sns/
-    ├── notifications/   # SNS topic
-    ├── secrets/
-    └── monitoring/      # CloudWatch dashboards + alarms
+Internet
+    │
+    ▼
+AWS WAF v2
+    │
+    ▼
+CloudFront (d1wwgn689544k.cloudfront.net)
+    ├── /auth/*  ──────────────────────────────────┐
+    ├── /api/*   ──────────────────────────────────┤
+    │                                              ▼
+    │                                    ALB (statusnest-dev-alb)
+    │                                              │
+    │                              ┌───────────────┼───────────────┐
+    │                              ▼               ▼               ▼
+    │                         auth:8000      monitor:8001    status:8002
+    │                         ECS Fargate    ECS Fargate     ECS Fargate
+    │                              │               │               │
+    └── default → S3 ─────────┐   └───────────────┴───────────────┘
+                               ▼               │
+                         React SPA         RDS PostgreSQL
+                                            ElastiCache Redis
 ```
 
 ---
 
-## CloudWatch Alarms
+## Modules
 
-| Alarm | Threshold |
-|-------|-----------|
-| ECS CPU High | > 80% |
-| ECS Memory High | > 80% |
-| RDS CPU High | > 80% |
-| RDS Connections High | > 50 |
-| Redis CPU High | > 80% |
-| Redis Memory Low | < 10% freeable |
-| ALB 5XX High | > 10 errors |
-| Target 5XX High | > 10 errors |
-| Unhealthy Hosts | >= 1 |
-
-<img width="959" height="419" alt="Screenshot 2026-07-03 143132" src="https://github.com/user-attachments/assets/e6b73c41-b9d2-47eb-a47a-112da41629cb" />
-
+| Module | Resources |
+|---|---|
+| `vpc` | VPC, public/private subnets, IGW, NAT Gateway, route tables |
+| `rds` | RDS PostgreSQL, subnet group, security group |
+| `elasticache` | Redis cluster, subnet group, security group |
+| `ecr` | ECR repositories for auth, monitor, status images |
+| `ecs` | ECS cluster, Fargate task definitions, services, IAM roles |
+| `alb` | Application Load Balancer, target groups, listener rules |
+| `frontend` | S3 bucket, CloudFront distribution, OAC, bucket policy |
+| `waf` | WAF v2 Web ACL (CloudFront-scoped, `us-east-1`) |
+| `waf-alb` | WAF v2 Web ACL (ALB-scoped, regional) |
+| `monitoring` | CloudWatch dashboards, alarms |
 
 ---
 
-## Remote State
+## Key Infrastructure
 
-```hcl
-terraform {
-  backend "s3" {
-    bucket         = "statusnest-terraform-state"
-    key            = "dev/terraform.tfstate"
-    region         = "us-east-1"
-    encrypt        = true
-    dynamodb_table = "statusnest-terraform-locks"
-  }
-}
-```
+| Resource | Value |
+|---|---|
+| CloudFront | `d1wwgn689544k.cloudfront.net` (ID: `E1PD475EXURYXL`) |
+| ALB | `statusnest-dev-alb-1293848550.us-east-1.elb.amazonaws.com` |
+| ECS Cluster | `statusnest-dev-cluster` |
+| RDS | `statusnest-dev-db.c2hcyc4yyuxy.us-east-1.rds.amazonaws.com` |
+| Redis | `statusnest-dev-redis.b8x2ra.0001.use1.cache.amazonaws.com:6379` |
+| S3 Bucket | `statusnest-dev-frontend` |
+| GitHub Actions Role | `arn:aws:iam::026243800492:role/statusnest-dev-github-actions-role` |
 
 ---
 
 ## Usage
 
 ```bash
-git clone https://github.com/aboodi679/statusnest-infra
 cd statusnest-infra
+
+# Init
 terraform init
-terraform plan
-terraform apply
+
+# Plan
+terraform plan -var="environment=dev"
+
+# Apply
+terraform apply -var="environment=dev"
 ```
+
+### Variables
+
+| Variable | Description |
+|---|---|
+| `environment` | Deployment environment (`dev`, `prod`) |
+
+---
+
+## CI/CD Integration
+
+GitHub Actions uses OIDC to assume the GitHub Actions IAM role — no long-lived AWS credentials stored in GitHub secrets.
+
+The role trust policy allows the `aboodi679/statusnest-*` repos to assume it on pushes to `main`.
+
+---
+
+## Notes
+
+- Route 53 / custom domain intentionally omitted (CloudFront default certificate used)
+- RDS uses PostgreSQL instead of Aurora (account-level restrictions)
+- Monitor and status ECS task definitions were created via CLI and are not yet fully managed by Terraform (auth task definition is Terraform-managed)
 
 ---
 
 ## Related Repos
 
 | Repo | Description |
-|------|-------------|
-| [statusnest-api](https://github.com/aboodi679/statusnest-api) | FastAPI backend — 3 microservices |
-| [statusnest-worker](https://github.com/aboodi679/statusnest-worker) | Lambda monitor + processor |
-| [statusnest-frontend](https://github.com/aboodi679/statusnest-frontend) | React dashboard |
-
----
-
-*Built by [Muhammad Abdullah](https://github.com/aboodi679) · Powered by AWS*
+|---|---|
+| [statusnest-api](https://github.com/aboodi679/statusnest-api) | FastAPI microservices (auth, monitor, status) |
+| [statusnest-worker](https://github.com/aboodi679/statusnest-worker) | Lambda monitor + SQS processor |
+| [statusnest-frontend](https://github.com/aboodi679/statusnest-frontend) | React SPA |
