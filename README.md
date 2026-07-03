@@ -2,12 +2,12 @@
 
 Terraform IaC for the StatusNest multi-tenant service monitoring platform. Provisions the complete AWS infrastructure across modular, reusable components.
 
+**Account:** `<AWS_ACCOUNT_ID>` | **Region:** `us-east-1`
+
 ---
 
-<img width="1568" height="685" alt="image" src="https://github.com/user-attachments/assets/c85a8b12-6b1f-40c3-ba40-031c2c26ed6f" />
-
-<img width="1507" height="745" alt="image" src="https://github.com/user-attachments/assets/84e78bbd-6af2-4398-a5d9-6fdc67985ced" />
-
+<!-- Images removed/replaced for privacy. If these are non-sensitive diagrams, consider re-adding sanitized versions. -->
+<!-- Example: ![architecture diagram](docs/architecture.png) -->
 
 ## Architecture
 
@@ -18,11 +18,11 @@ Internet
 AWS WAF v2
     │
     ▼
-CloudFront (d1wwgn689544k.cloudfront.net)
+CloudFront (<CLOUDFRONT_DOMAIN>)
     ├── /auth/*  ──────────────────────────────────┐
     ├── /api/*   ──────────────────────────────────┤
     │                                              ▼
-    │                                    ALB (statusnest-dev-alb)
+    │                                    ALB (<ALB_HOSTNAME>)
     │                                              │
     │                              ┌───────────────┼───────────────┐
     │                              ▼               ▼               ▼
@@ -58,13 +58,13 @@ CloudFront (d1wwgn689544k.cloudfront.net)
 
 | Resource | Value |
 |---|---|
-| CloudFront | `d1wwgn689544k.cloudfront.net` (ID: `E1PD475EXURYXL`) |
-| ALB | `statusnest-dev-alb-1293848550.us-east-1.elb.amazonaws.com` |
+| CloudFront | `<CLOUDFRONT_DOMAIN>` (ID: `<CLOUDFRONT_ID>`) |
+| ALB | `<ALB_HOSTNAME>` |
 | ECS Cluster | `statusnest-dev-cluster` |
-| RDS | `statusnest-dev-db.c2hcyc4yyuxy.us-east-1.rds.amazonaws.com` |
-| Redis | `statusnest-dev-redis.b8x2ra.0001.use1.cache.amazonaws.com:6379` |
-| S3 Bucket | `statusnest-dev-frontend` |
-| GitHub Actions Role | `arn:aws:iam::026243800492:role/statusnest-dev-github-actions-role` |
+| RDS | `<RDS_ENDPOINT>` |
+| Redis | `<REDIS_ENDPOINT>` |
+| S3 Bucket | `<S3_BUCKET>` |
+| GitHub Actions Role | `<GITHUB_ACTIONS_ROLE_ARN>` |
 
 ---
 
@@ -93,9 +93,9 @@ terraform apply -var="environment=dev"
 
 ## CI/CD Integration
 
-GitHub Actions uses OIDC to assume the GitHub Actions IAM role — no long-lived AWS credentials stored in GitHub secrets.
+GitHub Actions uses OIDC to assume a short-lived IAM role — no long-lived AWS credentials stored in GitHub secrets.
 
-The role trust policy allows the `aboodi679/statusnest-*` repos to assume it on pushes to `main`.
+The role trust policy allows your automation/builder repositories to assume it; ensure the trust policy is scoped to the minimum required repositories and branches and uses precise OIDC subjects.
 
 ---
 
