@@ -66,6 +66,9 @@ statusnest-infra/
 | Target 5XX High | > 10 errors |
 | Unhealthy Hosts | >= 1 |
 
+<img width="959" height="419" alt="Screenshot 2026-07-03 143132" src="https://github.com/user-attachments/assets/e6b73c41-b9d2-47eb-a47a-112da41629cb" />
+
+
 ---
 
 ## Remote State
